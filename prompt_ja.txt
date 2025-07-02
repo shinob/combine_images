@@ -1,0 +1,39 @@
+画像処理タスクを実行するPythonスクリプトを生成してください。スクリプト名は `process_images.py` とし、画像の整列/切り抜きと画像の結合の機能を組み合わせる必要があります。
+
+**パート1: 画像の整列と切り抜き**
+1.  **設定**: `OUTPUT_WIDTH` (例: 5700)、`OUTPUT_HEIGHT` (例: 3900)、および `TEMPLATE_FILENAME` (例: 'target.jpg') を定義します。
+2.  **テンプレートマッチング関数**: OpenCV の `cv2.matchTemplate` と `cv2.TM_CCOEFF_NORMED` を使用して、`image` 内の `template` 画像の最適な一致の左上座標を見つける `find_template_location(image, template)` 関数を実装します。
+3.  **中央切り抜き関数**: 入力画像 `img` を指定された `crop_width` と `crop_height` で中央から切り抜く `crop_center(img, crop_width, crop_height)` 関数を実装します。
+4.  **メインロジック**:
+    *   `TEMPLATE_FILENAME` を読み込みます。テンプレート画像を読み込めない場合は、`FileNotFoundError` または `cv2.error` を処理します。
+    *   現在のディレクトリにある `IMG_*.JPG` パターンに一致するすべての画像ファイルを見つけます。
+    *   各 `IMG_*.JPG` ファイルについて:
+        *   画像を読み込みます。
+        *   `find_template_location` を使用して、その中のテンプレートの位置を見つけます。
+        *   ファイル名と検出された位置を保存します。
+    *   検出されたすべてのテンプレート位置から、x 座標と y 座標の中央値を計算します。これが `target_x` と `target_y` になります。
+    *   各 `IMG_*.JPG` ファイルについて:
+        *   検出されたテンプレート位置を `target_x` と `target_y` にシフトするために必要な `dx` と `dy` を計算します。
+        *   `cv2.warpAffine` を使用してアフィン変換を適用し、画像を `dx` と `dy` でシフトします。
+        *   `crop_center` を使用して、変換された画像を `OUTPUT_WIDTH` x `OUTPUT_HEIGHT` に切り抜きます。
+        *   結果の画像を `aligned_` プレフィックス (例: `aligned_IMG_0405.JPG`) を付けて保存します。これらの `aligned_` 画像のファイル名を収集します。
+
+**パート2: 画像の結合**
+1.  **設定**: `OUTPUT_FILENAME` を定義します。これは、ISO 形式の現在の日付 (例: `2025-07-02.jpg`) でフォーマットされた文字列である必要があります。
+2.  **メインロジック**:
+    *   (パート1で生成された) 厳密に3つの `aligned_IMG_*.JPG` ファイルが利用可能であることを確認します。そうでない場合は、エラーを出力して終了します。
+    *   これらの3つの `aligned_IMG_*.JPG` ファイルを読み込みます。一貫した順序を維持するために、アルファベット順にソートされていることを確認します。
+    *   すべての画像が同じ寸法であると仮定します。`segment_width` を `width // 3` として計算します。
+    *   読み込まれた画像から3つの部分を抽出します。
+        *   `part1`: 最初の画像の最も右の3分の1 (`images[0][:, width - segment_width:width]`)。
+        *   `part2`: 2番目の画像の中央の3分の1 (`images[1][:, segment_width:segment_width * 2]`)。
+        *   `part3`: 3番目の画像の最も左の3分の1 (`images[2][:, 0:segment_width]`)。
+    *   `np.hstack` を使用して、これらの部分を `part3`、`part2`、`part1` の順序で水平に結合し、`combined_image` を作成します。
+    *   `combined_image` を `OUTPUT_FILENAME` に保存します。
+
+**一般的な要件**:
+*   画像処理には `cv2` を、配列操作には `numpy` を使用します。
+*   ファイルの検索には `glob` を、パス操作には必要に応じて `os` を使用します。
+*   出力ファイル名の生成には `datetime` を使用します。
+*   進行状況とエラーに関するユーザーフィードバックのために、適切な `print` ステートメントを含めます。
+*   スクリプトは自己完結型で実行可能である必要があります。
