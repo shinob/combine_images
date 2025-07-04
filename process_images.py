@@ -85,8 +85,8 @@ if __name__ == '__main__':
     target_y = int(np.median(all_y))
     print(f"\n目標座標を計算しました: ({target_x}, {target_y})")
 
-    print("\n各画像を調整して保存しています...")
-    aligned_image_filenames = []
+    print("\n各画像を調整し、メモリ上で処理します...")
+    aligned_images = []
     for item in match_locations:
         filename = item['file']
         original_loc = item['loc']
@@ -103,29 +103,20 @@ if __name__ == '__main__':
         img_aligned = cv2.warpAffine(source_img, m, (width, height))
 
         img_cropped = crop_center(img_aligned, OUTPUT_WIDTH, OUTPUT_HEIGHT)
-        output_filename = f"aligned_{filename}"
-        cv2.imwrite(output_filename, img_cropped)
-        aligned_image_filenames.append(output_filename)
+        aligned_images.append(img_cropped)
 
-    print("\nalign_and_crop 処理が完了しました。")
+    print("\n画像の位置合わせと切り出し処理が完了しました。")
 
     # --- combine_images.py の処理 ---
-    # aligned_IMG_*.JPG ファイルを読み込む
-    # aligned_image_filenames を使用して、生成されたファイルを直接読み込む
+    # メモリ上の画像データを直接結合する
     
-    if len(aligned_image_filenames) != 3:
-        print(f"エラー: 期待される3枚の 'aligned_IMG_*.JPG' ファイルが見つかりません。現在 {len(aligned_image_filenames)} 枚です。")
+    if len(aligned_images) != 3:
+        print(f"エラー: 期待される3枚の調整済み画像が見つかりません。現在 {len(aligned_images)} 枚です。")
         exit()
 
-    images = []
-    for filename in sorted(aligned_image_filenames): # ソートして順番を保証
-        img = cv2.imread(filename)
-        if img is None:
-            print(f"警告: {filename} を読み込めませんでした。スキップします。")
-            exit()
-        images.append(img)
-    
-    print(f"以下の3枚の画像を読み込みました: {sorted(aligned_image_filenames)}")
+    # aligned_images は既にファイル名でソートされた順になっている
+    images = aligned_images # メモリ上の画像を 'images' 変数に格納
+    print(f"メモリ上にある3枚の画像を結合します: {image_files}")
 
     height, width, _ = images[0].shape
     segment_width = width // 3
