@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import cv2
 import numpy as np
 import glob
@@ -8,11 +10,12 @@ from datetime import date
 # align_and_crop.py の設定
 OUTPUT_WIDTH = 5700
 OUTPUT_HEIGHT = 3900
-TEMPLATE_FILENAME = 'target.jpg'
+# TEMPLATE_FILENAME = 'target2.jpg' # 動的に生成するため不要
 
 # combine_images.py の設定
 OUTPUT_FILENAME = f'{date.today().isoformat()}.jpg'
 # --- 設定ここまで ---
+
 
 def find_template_location(image, template):
     """
@@ -24,6 +27,7 @@ def find_template_location(image, template):
     _, _, _, max_loc = cv2.minMaxLoc(result)
     return max_loc
 
+
 def crop_center(img, crop_width, crop_height):
     """
     画像の中央を切り出す
@@ -31,23 +35,31 @@ def crop_center(img, crop_width, crop_height):
     img_height, img_width, _ = img.shape
     start_x = (img_width - crop_width) // 2
     start_y = (img_height - crop_height) // 2
-    return img[start_y:start_y + crop_height, start_x:x_start + crop_width]
+    return img[start_y:start_y + crop_height, start_x:start_x + crop_width]
 
 
 if __name__ == '__main__':
     # --- align_and_crop.py の処理 ---
-    try:
-        template_img = cv2.imread(TEMPLATE_FILENAME)
-        if template_img is None:
-            raise FileNotFoundError
-        print(f"テンプレート画像を読み込みました: {TEMPLATE_FILENAME}")
-    except (FileNotFoundError, cv2.error):
-        print(f"エラー: テンプレート画像 '{TEMPLATE_FILENAME}' が見つからないか、読み込めません。")
-        exit()
-
     image_files = sorted(glob.glob('IMG_*.JPG'))
     if not image_files:
         print("処理対象のIMG_*.JPGファイルが見つかりません。")
+        exit()
+
+    try:
+        # 最初の画像をテンプレート生成元として使用
+        template_source_filename = image_files[0]
+        print(f"テンプレートを '{template_source_filename}' から生成します。")
+        source_for_template = cv2.imread(template_source_filename)
+        if source_for_template is None:
+            raise cv2.error(f"画像の読み込みに失敗しました: {template_source_filename}")
+
+        # 指定された座標とサイズで切り出してテンプレートを作成
+        crop_x, crop_y, crop_w, crop_h = 1600, 1500, 1000, 1000
+        template_img = source_for_template[crop_y:crop_y + crop_h, crop_x:crop_x + crop_w]
+        print(f"  - 座標 ({crop_x}, {crop_y}) から 幅{crop_w}x高さ{crop_h} で切り出しました。")
+
+    except Exception as e:
+        print(f"エラー: テンプレートの生成に失敗しました。 - {e}")
         exit()
 
     match_locations = []
