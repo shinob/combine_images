@@ -6,12 +6,9 @@ import glob
 import os
 from datetime import date
 
-# --- 設定 ---
-# align_and_crop.py の設定
-OUTPUT_WIDTH = 5700
-OUTPUT_HEIGHT = 3900
-# TEMPLATE_FILENAME = 'target2.jpg' # 動的に生成するため不要
+import config
 
+# --- 設定 ---
 # combine_images.py の設定
 OUTPUT_FILENAME = f'{date.today().isoformat()}.jpg'
 # --- 設定ここまで ---
@@ -54,7 +51,7 @@ if __name__ == '__main__':
             raise cv2.error(f"画像の読み込みに失敗しました: {template_source_filename}")
 
         # 指定された座標とサイズで切り出してテンプレートを作成
-        crop_x, crop_y, crop_w, crop_h = 1600, 1500, 1000, 1000
+        crop_x, crop_y, crop_w, crop_h = config.TEMPLATE_CROP_X, config.TEMPLATE_CROP_Y, config.TEMPLATE_CROP_W, config.TEMPLATE_CROP_H
         template_img = source_for_template[crop_y:crop_y + crop_h, crop_x:crop_x + crop_w]
         print(f"  - 座標 ({crop_x}, {crop_y}) から 幅{crop_w}x高さ{crop_h} で切り出しました。")
 
@@ -102,7 +99,7 @@ if __name__ == '__main__':
         height, width, _ = source_img.shape
         img_aligned = cv2.warpAffine(source_img, m, (width, height))
 
-        img_cropped = crop_center(img_aligned, OUTPUT_WIDTH, OUTPUT_HEIGHT)
+        img_cropped = crop_center(img_aligned, config.OUTPUT_WIDTH, config.OUTPUT_HEIGHT)
         aligned_images.append(img_cropped)
 
     print("\n画像の位置合わせと切り出し処理が完了しました。")
