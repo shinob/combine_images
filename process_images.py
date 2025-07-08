@@ -107,22 +107,29 @@ if __name__ == '__main__':
     # --- combine_images.py の処理 ---
     # メモリ上の画像データを直接結合する
     
-    if len(aligned_images) != 3:
-        print(f"エラー: 期待される3枚の調整済み画像が見つかりません。現在 {len(aligned_images)} 枚です。")
+    num_images = len(aligned_images)
+    if num_images < 2:
+        print(f"エラー: 結合するには最低2枚の画像が必要です。現在 {num_images} 枚です。")
         exit()
 
     # aligned_images は既にファイル名でソートされた順になっている
     images = aligned_images # メモリ上の画像を 'images' 変数に格納
-    print(f"メモリ上にある3枚の画像を結合します: {image_files}")
+    print(f"メモリ上にある{num_images}枚の画像を結合します: {image_files}")
 
     height, width, _ = images[0].shape
-    segment_width = width // 3
+    # 画像をN個のセグメントに分割するための分割点を計算
+    split_points = [int(i * width / num_images) for i in range(num_images + 1)]
 
-    part1 = images[0][:, width - segment_width:width]
-    part2 = images[1][:, segment_width:segment_width * 2]
-    part3 = images[2][:, 0:segment_width]
+    parts = []
+    for i in range(num_images):
+        image_index = num_images - 1 - i
+        start_x = split_points[i]
+        end_x = split_points[i+1]
+        
+        part = images[image_index][:, start_x:end_x]
+        parts.append(part)
 
-    combined_image = np.hstack((part3, part2, part1))
+    combined_image = np.hstack(parts)
 
     cv2.imwrite(OUTPUT_FILENAME, combined_image)
     print(f"画像を結合し、'{OUTPUT_FILENAME}' として保存しました。")
