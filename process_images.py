@@ -11,6 +11,7 @@ import config
 # --- 設定 ---
 # combine_images.py の設定
 OUTPUT_FILENAME = f'{date.today().isoformat()}.jpg'
+TEMP_FILENAME =  f'temp_{date.today().isoformat()}.jpg'
 # --- 設定ここまで ---
 
 
@@ -54,6 +55,7 @@ if __name__ == '__main__':
         crop_x, crop_y, crop_w, crop_h = config.TEMPLATE_CROP_X, config.TEMPLATE_CROP_Y, config.TEMPLATE_CROP_W, config.TEMPLATE_CROP_H
         template_img = source_for_template[crop_y:crop_y + crop_h, crop_x:crop_x + crop_w]
         print(f"  - 座標 ({crop_x}, {crop_y}) から 幅{crop_w}x高さ{crop_h} で切り出しました。")
+        cv2.imwrite(TEMP_FILENAME, template_img)
 
     except Exception as e:
         print(f"エラー: テンプレートの生成に失敗しました。 - {e}")
